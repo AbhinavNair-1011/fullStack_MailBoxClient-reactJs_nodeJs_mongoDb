@@ -30,11 +30,11 @@ const login = async (req, res) => {
       return Helpers.sendUnauthorized(res, 'Invalid credentials');
     }
 
-    const accessToken = jwt.sign(
-      { id: user._id }, 
-      process.env.ACCESS_TOKEN_SECRET, 
-      { expiresIn: '1h' } 
-    );
+  const accessToken = jwt.sign(
+  { id: user._id, email: user.email, name: user.username }, 
+  process.env.ACCESS_TOKEN_SECRET, 
+  { expiresIn: '1h' }
+);
 
     res.cookie('accessToken', accessToken, {
       httpOnly: true,

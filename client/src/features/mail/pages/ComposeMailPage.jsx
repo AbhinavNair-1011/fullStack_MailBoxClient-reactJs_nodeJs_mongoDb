@@ -7,9 +7,9 @@ const ComposeMailPage = () => {
   const dispatch = useDispatch();
   const { isLoading, isSuccess, isError, message } = useSelector((state) => state.mail);
 
-  const handleSubmit = (formData) => {
+  const handleSubmit = async (formData) => {
     try{
-      dispatch(sendMail(formData)).unwrap();
+    await  dispatch(sendMail(formData)).unwrap();
       return true;
 
     }catch(err){

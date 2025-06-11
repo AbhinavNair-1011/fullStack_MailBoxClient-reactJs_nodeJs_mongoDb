@@ -7,7 +7,7 @@ const verifyToken = (req, res, next) => {
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, result) => {
     if (err) return Helpers.sendForbidden(res, 'Invalid token');
-    req.userId = result.id;
+    req.user= result;
     next();
   });
 };

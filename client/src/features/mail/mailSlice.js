@@ -1,5 +1,22 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { sendMail as sendMailApi } from './mailApi';
+import { getInboxMails ,fetchMailById,SendreplyMail} from './mailApi';
+
+export const fetchInboxMails = createAsyncThunk(
+  'mail/fetchInboxMails',
+  async (_, thunkAPI) => {
+    try {
+      const response = await getInboxMails();
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response.data);
+    }
+  }
+);
+export const fetchMailId = createAsyncThunk('mail/fetchMailById', async (id) => {
+  const response = await fetchMailById(id);
+  return response.data;
+});
 
 export const sendMail = createAsyncThunk(
   'mail/sendMail',
@@ -15,6 +32,17 @@ export const sendMail = createAsyncThunk(
   }
 );
 
+export const replyMail = createAsyncThunk(
+  'mail/replyMail',
+  async (replyData, thunkAPI) => {
+    try {
+      const res = await SendreplyMail(replyData);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || 'Failed to send reply');
+    }
+  }
+);
 const mailSlice = createSlice({
   name: 'mail',
   initialState: {
@@ -22,6 +50,9 @@ const mailSlice = createSlice({
     isSuccess: false,
     isError: false,
     message: '',
+    inbox:[],
+    selectedMail: null,
+
   },
   reducers: {
     reset: (state) => {
@@ -45,7 +76,21 @@ const mailSlice = createSlice({
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
-      });
+      })
+      .addCase(fetchInboxMails.pending, (state) => {
+      })
+      .addCase(fetchInboxMails.fulfilled, (state, action) => {
+        state.inbox = action.payload;
+      })
+      .addCase(fetchInboxMails.rejected, (state, action) => {
+      })
+        .addCase(fetchMailId.pending, (state) => {
+      })
+      .addCase(fetchMailId.fulfilled, (state, action) => {
+        state.selectedMail = action.payload;
+      })
+      .addCase(fetchMailId.rejected, (state, action) => {
+             })
   }
 });
 

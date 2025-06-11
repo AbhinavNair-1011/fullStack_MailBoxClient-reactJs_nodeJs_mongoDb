@@ -13,6 +13,8 @@ import LoginPage from './features/auth/pages/LoginPage';
 import RegisterPage from './features/auth/pages/RegisterPage';
 
 import ComposeMailPage from './features/mail/pages/ComposeMailPage';
+import InboxPage from './features/mail/pages/InboxPage';
+import MailDetailPage from './features/mail/pages/MailDetailsPage'; 
 
 const Dashboardtemp = () => (
   <div className="p-8 bg-white rounded-lg shadow-md text-center">
@@ -37,7 +39,9 @@ function App() {
             <Route element={<MainLayout />}>
               <Route path="/" element={<Dashboardtemp />} />
               <Route path="/dashboard" element={<Dashboardtemp />} />
-              
+              <Route path="/inbox" element={<InboxPage />} />
+              <Route path="/inbox/:mailId" element={<MailDetailPage />} />
+
               <Route path="/compose" element={<ComposeMailPage />} />
             </Route>
           </Route>
