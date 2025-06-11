@@ -1,24 +1,29 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { replyMail } from '../mailSlice';
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { replyMail } from "../mailSlice";
 
-const ReplyForm = ({ recipient, subject }) => {
+const ReplyForm = ({ recipient, subject ,onSuccess,setReplySuccess  }) => {
   const dispatch = useDispatch();
-  const [body, setBody] = useState('');
+  const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess(null);
+
+    setReplySuccess(null);
 
     try {
-      await dispatch(replyMail({ recipient, subject: `Re: ${subject}`, body })).unwrap();
-      setSuccess('Reply sent successfully!');
-      setBody('');
+      await dispatch(
+        replyMail({ recipient, subject: `Re: ${subject}`, body })
+      ).unwrap();
+      setReplySuccess("Reply sent successfully!");
+      setBody("");
+onSuccess(false)
+
+   
     } catch (err) {
       setError(err);
     } finally {
@@ -31,7 +36,6 @@ const ReplyForm = ({ recipient, subject }) => {
       <h3 className="text-xl font-bold mb-4">Reply</h3>
 
       {error && <p className="text-red-500 mb-2">{error}</p>}
-      {success && <p className="text-green-500 mb-2">{success}</p>}
 
       <form onSubmit={handleSubmit}>
         <textarea
@@ -47,7 +51,7 @@ const ReplyForm = ({ recipient, subject }) => {
           className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? 'Sending...' : 'Send Reply'}
+          {loading ? "Sending..." : "Send Reply"}
         </button>
       </form>
     </div>
