@@ -8,8 +8,8 @@ router.post('/mail/send', verifyToken, sendMail);
 
 router.get('/mail/inbox', verifyToken, getInbox);  
 router.get('/mail/inbox/:id', verifyToken,getMailById);
-router.post('/mail/reply', verifyToken, replyMail);
 router.get('/mail/sent', verifyToken, getSentMails); 
+router.post('/mail/:mailId/reply', verifyToken, replyMail);
 
 
 module.exports = router;

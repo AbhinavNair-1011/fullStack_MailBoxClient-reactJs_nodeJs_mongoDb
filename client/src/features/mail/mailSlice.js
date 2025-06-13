@@ -46,11 +46,12 @@ export const sendMail = createAsyncThunk(
 
 export const replyMail = createAsyncThunk(
   'mail/replyMail',
-  async (replyData, thunkAPI) => {
+  async ({mailId, body}, thunkAPI) => {
     try {
-      const res = await SendreplyMail(replyData);
+      const res = await SendreplyMail(mailId,body);
       return res.data.data;
     } catch (err) {
+      console.log(err)
       return thunkAPI.rejectWithValue(err.response?.data?.message || 'Failed to send reply');
     }
   }

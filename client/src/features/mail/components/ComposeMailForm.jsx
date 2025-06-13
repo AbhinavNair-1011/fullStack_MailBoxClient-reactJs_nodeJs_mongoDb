@@ -1,28 +1,41 @@
 import React, { useState } from 'react';
 import ReactQuill from 'react-quill';
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import 'react-quill/dist/quill.snow.css';
 
 const ComposeMailForm = ({ onSubmit, isLoading }) => {
   const [recipient, setRecipient] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+  const [error,setError] = useState('')
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const user = useSelector(state => state.auth.user);
+  const myEmail = user?.email;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-   const result= onSubmit({ recipient, subject, body });
-    if(result){
-        
-        setRecipient("");
-        setSubject("");
-        setBody("");
+
+    if (recipient.trim().toLowerCase() === myEmail.trim().toLowerCase()) {
+      setError("Cannot send mail to ur own id")
+      return;
     }
 
+    const result = await onSubmit({ recipient, subject, body });
+
+    if (result === true) {
+      setRecipient("");
+      setSubject("");
+      setBody("");
+      navigate('/sent');
+    } 
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md">
       <h2 className="text-2xl font-bold text-gray-800">Compose New Mail</h2>
-      
+
       <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700">Recipient</label>
         <input
@@ -33,7 +46,9 @@ const ComposeMailForm = ({ onSubmit, isLoading }) => {
           onChange={(e) => setRecipient(e.target.value)}
           required
         />
+         {error && <p className='text-[11px] text-red-500 pl-3'>{error}</p>}
       </div>
+     
 
       <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700">Subject</label>
@@ -63,9 +78,7 @@ const ComposeMailForm = ({ onSubmit, isLoading }) => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className={`bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow-sm transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            isLoading ? 'opacity-75 cursor-not-allowed' : ''
-          }`}
+          className={`bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow-sm transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
           disabled={isLoading}
         >
           {isLoading ? (

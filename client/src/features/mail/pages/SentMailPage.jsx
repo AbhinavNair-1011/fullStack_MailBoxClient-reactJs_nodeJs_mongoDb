@@ -39,7 +39,7 @@ const SentMailsPage = () => {
             No sent mails found.
           </div>
         ) : (
-          sent.map((mail) => <MailItem key={mail._id} mail={mail} />)
+          sent.map((mail) => <MailItem key={mail._id} mail={mail} type="sent"/>)
         )}
       </div>
     </div>

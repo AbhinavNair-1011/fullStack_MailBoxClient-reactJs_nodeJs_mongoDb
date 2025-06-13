@@ -4,7 +4,6 @@ import { Navigate, Outlet } from 'react-router-dom';
 
 const ProtectedRoute = () => {
   const { user, isLoading } = useSelector((state) => state.auth);
-  console.log(user)
   
 
   if (!user) {
