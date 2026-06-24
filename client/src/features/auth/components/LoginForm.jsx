@@ -24,7 +24,7 @@ const LoginForm = () => {
     const resultAction = await dispatch(loginUser(formData));
 
     if (loginUser.fulfilled.match(resultAction)) {
-      navigate('/dashboard');
+      navigate('/inbox');
     }
   };
 
