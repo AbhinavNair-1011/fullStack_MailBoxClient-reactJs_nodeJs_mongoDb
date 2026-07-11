@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, clearError } from '../authSlice';
 import { useNavigate } from 'react-router-dom';
+import socket from '../../../socket/socket';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -24,6 +25,7 @@ const LoginForm = () => {
     const resultAction = await dispatch(loginUser(formData));
 
     if (loginUser.fulfilled.match(resultAction)) {
+      socket.connect();
       navigate('/inbox');
     }
   };
@@ -94,16 +96,10 @@ const LoginForm = () => {
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                Remember me
-              </label>
+            
             </div>
 
-            <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                Forgot password?
-              </a>
-            </div>
+       
           </div>
 
           <button

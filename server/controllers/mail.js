@@ -1,59 +1,74 @@
-const Mail = require('../models/mail');
-const Helpers = require('../utils/Helpers');  
-const User = require("../models/user")
+const Mail = require("../models/mail");
+const Helpers = require("../utils/Helpers");
+const User = require("../models/user");
+const { getIO } = require("../config/socket");
 
 const sendMail = async (req, res) => {
   try {
     const { recipient, subject, body } = req.body;
 
     if (!recipient || !subject || !body) {
-      return Helpers.sendBadRequest(res, 'Recipient, subject, and body are required');
+      return Helpers.sendBadRequest(
+        res,
+        "Recipient, subject, and body are required",
+      );
     }
 
-    if (recipient.trim().toLowerCase() === req.user.email.trim().toLowerCase()) {
-      return Helpers.sendBadRequest(res, 'You cannot send mail to yourself');
+    if (
+      recipient.trim().toLowerCase() === req.user.email.trim().toLowerCase()
+    ) {
+      return Helpers.sendBadRequest(res, "You cannot send mail to yourself");
     }
 
-    const recipientUser = await User.findOne({ email: recipient.trim().toLowerCase() });
+    const recipientUser = await User.findOne({
+      email: recipient.trim().toLowerCase(),
+    });
     if (!recipientUser) {
-      return Helpers.sendBadRequest(res, 'Recipient email does not exist');
+      return Helpers.sendBadRequest(res, "Recipient email does not exist");
     }
 
     const newMail = new Mail({
       senderId: req.user.id,
       senderEmail: req.user.email,
       recipient,
+      recipientId: recipientUser._id,
+
       subject,
       body,
-      isReadByRecipient: false, 
-      isReadBySender: true    
+      isReadByRecipient: false,
+      isReadBySender: true,
     });
-
     await newMail.save();
 
-    return Helpers.sendCreated(res, { mail: newMail }, 'Mail sent successfully');
+    getIO().to(recipientUser._id.toString()).emit("mail:new", newMail);
+
+    return Helpers.sendCreated(
+      res,
+      { mail: newMail },
+      "Mail sent successfully",
+    );
   } catch (error) {
     console.error(error);
-    return Helpers.sendServerError(res, 'Something went wrong', error);
+    return Helpers.sendServerError(res, "Something went wrong", error);
   }
 };
-
-
 
 const getInbox = async (req, res) => {
   try {
     const userEmail = req.user.email;
 
     if (!userEmail) {
-      return Helpers.sendBadRequest(res, 'User email not found');
+      return Helpers.sendBadRequest(res, "User email not found");
     }
 
- const inboxMails = await Mail.find({ recipient: userEmail }).sort({ updatedAt: -1 });
+    const inboxMails = await Mail.find({ recipient: userEmail }).sort({
+      updatedAt: -1,
+    });
 
     return Helpers.sendSuccess(res, inboxMails);
   } catch (error) {
     console.error(error);
-    return Helpers.sendServerError(res, 'Failed to fetch inbox mails', error);
+    return Helpers.sendServerError(res, "Failed to fetch inbox mails", error);
   }
 };
 const getMailById = async (req, res) => {
@@ -62,13 +77,13 @@ const getMailById = async (req, res) => {
     const userEmail = req.user.email;
 
     const mail = await Mail.findById(mailId);
-    if (!mail) return Helpers.sendNotFound(res, 'Mail not found');
+    if (!mail) return Helpers.sendNotFound(res, "Mail not found");
 
     const isSender = mail.senderEmail === userEmail;
     const isRecipient = mail.recipient === userEmail;
 
     if (!isSender && !isRecipient)
-      return Helpers.sendForbidden(res, 'Unauthorized access');
+      return Helpers.sendForbidden(res, "Unauthorized access");
 
     if (isRecipient && !mail.isReadByRecipient) {
       mail.isReadByRecipient = true;
@@ -81,17 +96,17 @@ const getMailById = async (req, res) => {
     }
 
     if (mail.replies && mail.replies.length > 0) {
-      mail.replies.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      mail.replies.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
     }
 
     return Helpers.sendSuccess(res, mail);
   } catch (err) {
     console.error(err);
-    return Helpers.sendServerError(res, 'Error retrieving mail', err);
+    return Helpers.sendServerError(res, "Error retrieving mail", err);
   }
 };
-
-
 
 const replyMail = async (req, res) => {
   try {
@@ -102,43 +117,45 @@ const replyMail = async (req, res) => {
 
     const mail = await Mail.findById(mailId);
     if (!mail) {
-      return Helpers.sendNotFound(res, 'Original mail not found');
+      return Helpers.sendNotFound(res, "Original mail not found");
     }
 
     const reply = {
       senderId,
       senderEmail,
-      body
+      body,
     };
 
     console.log(reply);
 
     mail.replies.push(reply);
-    mail.updatedAt = new Date();
 
- if (mail.recipient === senderEmail) {
-  mail.isReadBySender = false;
-} else {
-  mail.isReadByRecipient = false;
-}
-
+    if (mail.recipient === senderEmail) {
+      mail.isReadBySender = false;
+    } else {
+      mail.isReadByRecipient = false;
+    }
 
     await mail.save();
+    const receiverId =
+      senderEmail === mail.senderEmail
+        ? mail.recipientId.toString()
+        : mail.senderId.toString();
+    getIO().to(receiverId).emit("mail:reply", mail);
 
-    return Helpers.sendSuccess(res, mail, 'Reply added');
+    return Helpers.sendSuccess(res, mail, "Reply added");
   } catch (error) {
     console.error(error);
-    return Helpers.sendServerError(res, 'Something went wrong', error);
+    return Helpers.sendServerError(res, "Something went wrong", error);
   }
 };
-
 
 const getSentMails = async (req, res) => {
   try {
     const senderId = req.user.id;
 
     if (!senderId) {
-      return Helpers.sendBadRequest(res, 'User ID not found');
+      return Helpers.sendBadRequest(res, "User ID not found");
     }
 
     const sentMails = await Mail.find({ senderId }).sort({ updatedAt: -1 });
@@ -146,15 +163,14 @@ const getSentMails = async (req, res) => {
     return Helpers.sendSuccess(res, sentMails);
   } catch (error) {
     console.error(error);
-    return Helpers.sendServerError(res, 'Failed to fetch sent mails', error);
+    return Helpers.sendServerError(res, "Failed to fetch sent mails", error);
   }
 };
-
 
 module.exports = {
   sendMail,
   getInbox,
   getMailById,
   replyMail,
-  getSentMails
+  getSentMails,
 };

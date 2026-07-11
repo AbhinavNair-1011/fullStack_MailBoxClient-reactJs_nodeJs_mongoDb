@@ -1,47 +1,59 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { register, login, logout } from './authApi';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { register, login, logout, me } from "./authApi";
 
 export const registerUser = createAsyncThunk(
-  'auth/register',
+  "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
       const response = await register(userData);
-      return response.data; 
+      return response.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || 'Registration failed');
+      return rejectWithValue(err.response?.data || "Registration failed");
     }
-  }
+  },
 );
 
 export const loginUser = createAsyncThunk(
-  'auth/login',
+  "auth/login",
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await login(credentials);
       return response.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || 'Login failed');
+      return rejectWithValue(err.response?.data || "Login failed");
     }
-  }
+  },
 );
 
 export const logoutUser = createAsyncThunk(
-  'auth/logout',
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
       await logout();
     } catch (err) {
-      return rejectWithValue(err.response?.data || 'Logout failed');
+      return rejectWithValue(err.response?.data || "Logout failed");
     }
-  }
+  },
 );
 
+export const fetchMe = createAsyncThunk(
+  "auth/me",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await me();
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || "Auth failed");
+    }
+  },
+);
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState: {
     user: null,
     isLoading: false,
     error: null,
+    authChecked: false,
   },
   reducers: {
     clearError: (state) => {
@@ -55,11 +67,11 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
+        state.user = action.payload?.user;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload?.message || 'Registration failed';
+        state.error = action.payload?.message || "Registration failed";
       })
 
       .addCase(loginUser.pending, (state) => {
@@ -67,11 +79,13 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.data.user;
+        state.user = action.payload?.data?.user;
+        state.authChecked = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload?.message || 'Login failed';
+        state.error = action.payload?.message || "Login failed";
+        state.authChecked = true;
       })
 
       .addCase(logoutUser.pending, (state) => {
@@ -83,7 +97,21 @@ const authSlice = createSlice({
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload?.message || 'Logout failed';
+        state.error = action.payload?.message || "Logout failed";
+      })
+      .addCase(fetchMe.pending, (state) => {
+        state.isLoading = true;
+        state.authChecked=false
+      })
+      .addCase(fetchMe.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload?.data?.user;
+        state.authChecked = true;
+      })
+      .addCase(fetchMe.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || "Login failed";
+        state.authChecked = true;
       });
   },
 });

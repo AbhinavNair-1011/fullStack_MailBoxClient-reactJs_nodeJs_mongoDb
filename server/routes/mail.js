@@ -7,8 +7,8 @@ const router = express.Router();
 router.post('/mail/send', verifyToken, sendMail);
 
 router.get('/mail/inbox', verifyToken, getInbox);  
-router.get('/mail/inbox/:id', verifyToken,getMailById);
 router.get('/mail/sent', verifyToken, getSentMails); 
+router.get('/mail/:id', verifyToken,getMailById);
 router.post('/mail/:mailId/reply', verifyToken, replyMail);
 
 

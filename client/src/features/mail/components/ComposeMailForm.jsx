@@ -13,7 +13,6 @@ const ComposeMailForm = ({ onSubmit, isLoading }) => {
 
   const user = useSelector(state => state.auth.user);
   const myEmail = user?.email;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 

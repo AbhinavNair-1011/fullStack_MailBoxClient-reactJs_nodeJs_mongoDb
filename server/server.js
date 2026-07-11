@@ -1,41 +1,24 @@
+const app = require("./app");
+const connectDB = require("./database/dbConfig");
 
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const cookieParser = require("cookie-parser");
-require('dotenv').config();
+const http = require("http");
 
-const app = express();
+const server = http.createServer(app);
+const { init } = require("./config/socket");
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
-}));
-app.use(express.json());
-app.use(cookieParser());
+init(server);
 
-const authRoute = require("./routes/auth");
-const mailRoutes = require('./routes/mail');
+const PORT = process.env.PORT || 3000;
 
-app.use("/api", authRoute);
-app.use('/api', mailRoutes);
-
-
-module.exports = app;
-
-if (process.env.NODE_ENV !== 'test') {
-  const PORT = process.env.PORT || 3000;
-  const MONGO_URI = process.env.MONGO_URI;
-
-  mongoose.connect(MONGO_URI)
-    .then(() => {
-      console.log(' MongoDB connected');
-      app.listen(PORT, () => {
-        console.log(` Server running on port ${PORT}`);
-      });
-    })
-    .catch(err => {
-      console.error('MongoDB connection failed:', err);
-      process.exit(1);
+async function runServer() {
+  try {
+    await connectDB();
+    server.listen(PORT, () => {
+      console.log(` Server running on port ${PORT}`);
     });
+  } catch (err) {
+    process.exit(1)
+  }
 }
+
+runServer();

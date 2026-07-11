@@ -33,7 +33,7 @@ const login = async (req, res) => {
   const accessToken = jwt.sign(
   { id: user._id, email: user.email, name: user.username }, 
   process.env.ACCESS_TOKEN_SECRET, 
-  { expiresIn: '1h' }
+  { expiresIn: '1m' }
 );
 
     res.cookie('accessToken', accessToken, {
@@ -62,4 +62,13 @@ const logout = async (req, res) => {
   }
 };
 
-module.exports = { register, login, logout };
+const me = (req, res) => {
+  Helpers.sendSuccess(
+    res,
+    {
+      user: req.user,
+    },
+    "Authenticated"
+  );
+};
+module.exports = { register, login, logout , me};

@@ -6,7 +6,7 @@ const verifyToken = (req, res, next) => {
   if (!token) return Helpers.sendUnauthorized(res, 'No token provided');
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, result) => {
-    if (err) return Helpers.sendForbidden(res, 'Invalid token');
+    if (err) return Helpers.sendUnauthorized(res, 'Invalid token');
     req.user= result;
     next();
   });

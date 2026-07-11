@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMailId } from "../mailSlice";
 import ReplyForm from "../components/ReplyForm";
+import socket from "../../../socket/socket";
 
 const MailDetailPage = () => {
   const { mailId } = useParams();
@@ -14,34 +15,35 @@ const MailDetailPage = () => {
   const [replySuccess, setReplySuccess] = useState(null);
   const navigate = useNavigate();
 
- const loadMail = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        await dispatch(fetchMailId(mailId)).unwrap();
-      } catch (err) {
-        setError(err?.message || "Failed to load mail");
-      } finally {
-        setLoading(false);
-      }
-    };
+  socket.on("mail:reply", () => {
+    dispatch(fetchMailId(mailId));
+  });
+  const loadMail = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await dispatch(fetchMailId(mailId)).unwrap();
+    } catch (err) {
+      setError(err?.message || "Failed to load mail");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-   
-
     loadMail();
   }, [dispatch, mailId]);
 
-const handleReplyClick = useCallback(() => {
-  setShowReplyForm(prev => !prev);
-}, []);
+  const handleReplyClick = useCallback(() => {
+    setShowReplyForm((prev) => !prev);
+  }, []);
 
-const backHandler = useCallback(() => {
-  navigate("/inbox");
-}, [navigate]);
+  const backHandler = useCallback(() => {
+    navigate("/inbox");
+  }, [navigate]);
 
-if(!selectedMail){
-    return null
+  if (!selectedMail) {
+    return null;
   }
 
   if (error)
@@ -53,7 +55,6 @@ if(!selectedMail){
       </div>
     );
 
-
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 relative">
       <p
@@ -64,25 +65,8 @@ if(!selectedMail){
       </p>
 
       <div className="max-w-2xl mx-auto space-y-6">
-
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
           <div className="px-5 py-4 border-b border-gray-100">
-            <div className="flex justify-between items-center mb-2">
-              <h1 className="text-xl font-semibold text-gray-900">
-                {selectedMail.subject}
-              </h1>
-
-              <div className="flex items-center space-x-2">
-                
-
-                {selectedMail.replies && selectedMail.replies.length > 0 && (
-                  <span className="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
-                    {selectedMail.replies.length} Replies
-                  </span>
-                )}
-              </div>
-            </div>
-
             <div className="flex flex-col sm:flex-row sm:justify-between text-sm text-gray-600">
               <p className="mb-1 sm:mb-0">
                 <span className="font-medium">From:</span>{" "}
@@ -97,6 +81,19 @@ if(!selectedMail){
                   minute: "2-digit",
                 })}
               </p>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <h1 className="text-md font-semibold text-gray-900">
+                {`Subject : ${selectedMail.subject}`}
+              </h1>
+
+              <div className="flex items-center space-x-2">
+                {selectedMail.replies && selectedMail.replies.length > 0 && (
+                  <span className="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
+                    {selectedMail.replies.length} Replies
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -117,9 +114,6 @@ if(!selectedMail){
                     key={index}
                     className="border border-gray-200 rounded p-4 bg-gray-50 shadow-sm"
                   >
-                    <p className="text-gray-700 whitespace-pre-wrap mb-2">
-                      {reply.body}
-                    </p>
                     <div className="text-sm text-gray-500 flex justify-between">
                       <span>
                         <strong>From:</strong> {reply.senderEmail}
@@ -134,6 +128,9 @@ if(!selectedMail){
                         })}
                       </span>
                     </div>
+                    <p className="text-gray-700 whitespace-pre-wrap mb-2">
+                      {reply.body}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -163,21 +160,24 @@ if(!selectedMail){
           </div>
         </div>
 
-        <div
-          className={`transition-all duration-300 overflow-hidden absolute bottom-0 right-0 ${
-            showReplyForm ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-          }`}
-        >
-          <ReplyForm
-            mailId={mailId}
-            onSuccess={setShowReplyForm}
-            setReplySuccess={setReplySuccess}
-            loadMail={loadMail}
-          />
-        </div>
+  <div
+  className={`overflow-hidden transition-all duration-300 ${
+    showReplyForm
+      ? "max-h-[700px] opacity-100 mt-6"
+      : "max-h-0 opacity-0"
+  }`}
+>
+  <ReplyForm
+    mailId={mailId}
+    onSuccess={setShowReplyForm}
+    setReplySuccess={setReplySuccess}
+    loadMail={loadMail}
+  />
+</div>
       </div>
-              {replySuccess && <p className="text-green-500 mb-2 text-center">{replySuccess}</p>}
-
+      {replySuccess && (
+        <p className="text-green-500 mb-2 text-center">{replySuccess}</p>
+      )}
     </div>
   );
 };
