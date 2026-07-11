@@ -40,8 +40,10 @@ const sendMail = async (req, res) => {
     });
     await newMail.save();
 
-    getIO().to(recipientUser._id.toString()).emit("mail:new", newMail);
-
+    getIO().to(newMail.recipientId.toString()).emit("mail:new", {
+      target: "inbox",
+      mail: newMail,
+    });
     return Helpers.sendCreated(
       res,
       { mail: newMail },
@@ -136,12 +138,14 @@ const replyMail = async (req, res) => {
       mail.isReadByRecipient = false;
     }
 
-    await mail.save();
     const receiverId =
-      senderEmail === mail.senderEmail
-        ? mail.recipientId.toString()
-        : mail.senderId.toString();
-    getIO().to(receiverId).emit("mail:reply", mail);
+      senderEmail === mail.senderEmail ? mail.recipientId : mail.senderId;
+
+    const target = senderEmail === mail.senderEmail ? "inbox" : "sent";
+
+    await mail.save();
+
+    getIO().to(receiverId.toString()).emit("mail:reply", { target, mail });
 
     return Helpers.sendSuccess(res, mail, "Reply added");
   } catch (error) {

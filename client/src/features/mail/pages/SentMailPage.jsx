@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchSentMails } from '../mailSlice';
-import MailItem from '../components/MailItem';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchSentMails } from "../mailSlice";
+import MailItem from "../components/MailItem";
+import {  clearSentNotifications } from "../../notification/notificationSlice";
 
 const SentMailsPage = () => {
   const dispatch = useDispatch();
-  const sent = useSelector(state => state.mail.sent);
+  const sent = useSelector((state) => state.mail.sent);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    dispatch(clearSentNotifications());
+  }, []);
   useEffect(() => {
     const loadSentMails = async () => {
       setLoading(true);
@@ -17,7 +21,7 @@ const SentMailsPage = () => {
       try {
         await dispatch(fetchSentMails()).unwrap();
       } catch (err) {
-        setError(err?.message || 'Failed to load sent mails');
+        setError(err?.message || "Failed to load sent mails");
       } finally {
         setLoading(false);
       }
@@ -28,7 +32,7 @@ const SentMailsPage = () => {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">📤 Sent Mails</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6"> Sent Mails</h1>
 
       {loading && <p>Loading sent mails...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -39,7 +43,9 @@ const SentMailsPage = () => {
             No sent mails found.
           </div>
         ) : (
-          sent.map((mail) => <MailItem key={mail._id} mail={mail} type="sent"/>)
+          sent.map((mail) => (
+            <MailItem key={mail._id} mail={mail} type="sent" />
+          ))
         )}
       </div>
     </div>

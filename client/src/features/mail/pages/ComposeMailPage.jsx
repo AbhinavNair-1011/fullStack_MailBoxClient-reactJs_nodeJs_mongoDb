@@ -32,7 +32,7 @@ const ComposeMailPage = () => {
   }, [isSuccess, isError, message, dispatch]);
 
   return (
-    <div className="max-w-3xl  p-4 mx-auto">
+    <div className="max-w-3xl  p-0 mt-3 lg:p-4 mx-auto">
       <ComposeMailForm onSubmit={handleSubmit} isLoading={isLoading} />
     </div>
   );

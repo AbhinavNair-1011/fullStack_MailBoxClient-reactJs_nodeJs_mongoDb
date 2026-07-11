@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchMailId } from "../mailSlice";
 import ReplyForm from "../components/ReplyForm";
 import socket from "../../../socket/socket";
+import { useRef } from "react";
 
 const MailDetailPage = () => {
   const { mailId } = useParams();
@@ -15,9 +16,28 @@ const MailDetailPage = () => {
   const [replySuccess, setReplySuccess] = useState(null);
   const navigate = useNavigate();
 
-  socket.on("mail:reply", () => {
-    dispatch(fetchMailId(mailId));
-  });
+    const repliesContainerRef = useRef(null);
+  useEffect(() => {
+    if (repliesContainerRef.current) {
+      repliesContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  }, [selectedMail?.replies]);
+  useEffect(() => {
+    const handleReply = ({ mail }) => {
+      if (mail._id === mailId) {
+        dispatch(fetchMailId(mailId));
+      }
+    };
+
+    socket.on("mail:reply", handleReply);
+
+    return () => {
+      socket.off("mail:reply", handleReply);
+    };
+  }, [dispatch, mailId]);
   const loadMail = async () => {
     setLoading(true);
     setError(null);
@@ -38,9 +58,9 @@ const MailDetailPage = () => {
     setShowReplyForm((prev) => !prev);
   }, []);
 
-  const backHandler = useCallback(() => {
-    navigate("/inbox");
-  }, [navigate]);
+const backHandler = useCallback(() => {
+  navigate(-1);
+}, [navigate]);
 
   if (!selectedMail) {
     return null;
@@ -87,7 +107,7 @@ const MailDetailPage = () => {
                 {`Subject : ${selectedMail.subject}`}
               </h1>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 ">
                 {selectedMail.replies && selectedMail.replies.length > 0 && (
                   <span className="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded">
                     {selectedMail.replies.length} Replies
@@ -102,13 +122,51 @@ const MailDetailPage = () => {
               className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: selectedMail.body }}
             />
+            <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
+              <button
+                onClick={handleReplyClick}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+              >
+                {showReplyForm ? "Cancel Reply" : "Reply"}
+                <svg
+                  className={`ml-2 h-4 w-4 transform ${
+                    showReplyForm ? "rotate-180" : ""
+                  }`}
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              showReplyForm
+                ? "max-h-[700px] opacity-100 mt-6"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            <ReplyForm
+              mailId={mailId}
+              onSuccess={setShowReplyForm}
+              setReplySuccess={setReplySuccess}
+              loadMail={loadMail}
+            />
+          </div>
+          {replySuccess && (
+            <p className="text-green-500 mb-2 text-center">{replySuccess}</p>
+          )}
           {selectedMail.replies && selectedMail.replies.length > 0 && (
-            <div className="mt-6 border-t pt-4 max-h-[550px] overflow-scroll">
-              <h3 className="text-lg font-semibold mb-2 text-gray-800">
+            <div className="mt-6 border-t pt-4 max-h-[550px] overflow-scroll" ref={repliesContainerRef}>
+              <h3 className="text-lg font-semibold mb-2 text-gray-800 p-2">
                 Replies
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-4" >
                 {selectedMail.replies.map((reply, index) => (
                   <div
                     key={index}
@@ -136,48 +194,8 @@ const MailDetailPage = () => {
               </div>
             </div>
           )}
-
-          <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
-            <button
-              onClick={handleReplyClick}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-            >
-              {showReplyForm ? "Cancel Reply" : "Reply"}
-              <svg
-                className={`ml-2 h-4 w-4 transform ${
-                  showReplyForm ? "rotate-180" : ""
-                }`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          </div>
         </div>
-
-  <div
-  className={`overflow-hidden transition-all duration-300 ${
-    showReplyForm
-      ? "max-h-[700px] opacity-100 mt-6"
-      : "max-h-0 opacity-0"
-  }`}
->
-  <ReplyForm
-    mailId={mailId}
-    onSuccess={setShowReplyForm}
-    setReplySuccess={setReplySuccess}
-    loadMail={loadMail}
-  />
-</div>
       </div>
-      {replySuccess && (
-        <p className="text-green-500 mb-2 text-center">{replySuccess}</p>
-      )}
     </div>
   );
 };

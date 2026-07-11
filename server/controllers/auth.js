@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const Helpers = require('../utils/helpers');
+const User = require('../models/user');
+const Helpers = require('../utils/Helpers');
 
 const register = async (req, res) => {
   try {
@@ -33,7 +33,7 @@ const login = async (req, res) => {
   const accessToken = jwt.sign(
   { id: user._id, email: user.email, name: user.username }, 
   process.env.ACCESS_TOKEN_SECRET, 
-  { expiresIn: '1m' }
+  { expiresIn: '1h' }
 );
 
     res.cookie('accessToken', accessToken, {
