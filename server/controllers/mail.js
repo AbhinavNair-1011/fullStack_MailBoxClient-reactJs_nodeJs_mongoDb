@@ -1,5 +1,5 @@
 const Mail = require("../models/mail");
-const Helpers = require("../utils/Helpers");
+const Helpers = require("../utils/helpers");
 const User = require("../models/user");
 const { getIO } = require("../config/socket");
 
